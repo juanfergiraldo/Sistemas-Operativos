@@ -36,53 +36,51 @@ int main(){
     printf("El archivo %s no pudo abrirse.\n", proc_file_name);
     exit(1);
   }
-
   //TODO: Load file information into HEAP memory
    n_entries = load_procs(procf_desc, &ptr_procs);
-
+   //TODO: Show menu to create, modify and delete entries
+   //      (and save changes to file)
+   //TODO: Close file
     do{
      opc = print_menu();
      switch (opc) {
        case '1' :
           create_proc(&ptr_procs, &n_entries);
-       break;
+          break;
        case '2' :
           modify_procs(&ptr_procs, n_entries);
-       break;
+          break;
        case '3' :
           delete_proc(&ptr_procs, &n_entries);
-       break;
+          break;
        case '4' :
           print_procs(ptr_procs, n_entries);
-       break;
+          break;
        case '5' :
        procf_desc = fopen(proc_file_name, "w");
           save_procs(ptr_procs, n_entries, procf_desc);
-       break;
+          break;
        case '6' :
           gout(procf_desc, &ptr_procs);
-       break;
+          break;
        default:
           printf("Por favor ingrese un valor permitido\n");
-       break;
+          break;
      }
-   }while (1);
-  //TODO: Show menu to create, modify and delete entries
-  //      (and save changes to file)
-  //TODO: Close file
+   }while(opc != '6');
   return 0;
 }
 
 char print_menu(){
   char option = 'x';
-    printf("Por favor elija una opción:\n");
+    printf("\nPor favor elija una opción:\n");
     printf("1. Crear un proceso.\n");
     printf("2. Modificar un proceso.\n");
     printf("3. Eliminar un proceso.\n");
     printf("4. Mostrar los procesos\n");
     printf("5. Guardar los cambios\n");
     printf("6. Salir\n");
-    scanf("%c", &option);
+    scanf("%s", &option);
   return option;
 }
 
