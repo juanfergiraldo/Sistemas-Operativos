@@ -17,7 +17,7 @@ int create_proc(PROC**, int*);
 int delete_proc(PROC**, int*);
 void save_procs(PROC* p_procs, int n_entries, FILE* procf_desc);
 int modify_procs(PROC**, int);
-void gout(FILE* procf_desc);
+void gout(FILE* procf_desc, PROC** p_procs);
 
 
 // File name
@@ -36,47 +36,51 @@ int main(){
     printf("El archivo %s no pudo abrirse.\n", proc_file_name);
     exit(1);
   }
-
   //TODO: Load file information into HEAP memory
    n_entries = load_procs(procf_desc, &ptr_procs);
-
+   //TODO: Show menu to create, modify and delete entries
+   //      (and save changes to file)
+   //TODO: Close file
     do{
      opc = print_menu();
      switch (opc) {
        case '1' :
           create_proc(&ptr_procs, &n_entries);
-       break;
+          break;
        case '2' :
           modify_procs(&ptr_procs, n_entries);
-       break;
+          break;
        case '3' :
           delete_proc(&ptr_procs, &n_entries);
-       break;
+          break;
        case '4' :
           print_procs(ptr_procs, n_entries);
-       break;
+          break;
        case '5' :
+       procf_desc = fopen(proc_file_name, "w");
           save_procs(ptr_procs, n_entries, procf_desc);
-       break;
+          break;
        case '6' :
-          gout(procf_desc);
-       break;
+          gout(procf_desc, &ptr_procs);
+          break;
        default:
           printf("Por favor ingrese un valor permitido\n");
-       break;
+          break;
      }
-   }while (1);
-  //TODO: Show menu to create, modify and delete entries
-  //      (and save changes to file)
-  //TODO: Close file
+   }while(opc != '6');
   return 0;
 }
 
 char print_menu(){
   char option = 'x';
-    printf("Por favor elija una opción:\n");
-    printf("\n1. Crear un proceso.\n2. Modificar un proceso.\n3. Eliminar un proceso.\n4. Mostrar los procesos\n5. Guardar los cambios\n6. Salir\n");
-    scanf("%c", &option);
+    printf("\nPor favor elija una opción:\n");
+    printf("1. Crear un proceso.\n");
+    printf("2. Modificar un proceso.\n");
+    printf("3. Eliminar un proceso.\n");
+    printf("4. Mostrar los procesos\n");
+    printf("5. Guardar los cambios\n");
+    printf("6. Salir\n");
+    scanf("%s", &option);
   return option;
 }
 
@@ -84,17 +88,25 @@ int create_proc(PROC** p_procs, int* n_entries){
   int id;
   char nom[40];
   int size;
-  printf("%d\n", *n_entries);
+  int ban = 0;
   printf("\n");
   printf("Por favor ingrese el id del proceso, el nombre y el tamaño, usando tabulador o enter para separar c/u.\n");
   scanf("%d\t %10s\t %10d", &id, nom, &size);
   printf("\n");
-  
-  *p_procs = (PROC*)realloc(*p_procs, sizeof(PROC)*(*n_entries+1));
-  (*p_procs)[*n_entries].id = id;
-  strcpy((*p_procs)[*n_entries].nombre, nom);
-  (*p_procs)[*n_entries].tam = size;
-  *n_entries = *n_entries + 1;
+  for (int i = 0; i < *n_entries; i++){
+    if((*p_procs)[i].id == id){
+      ban = 1;
+    }
+  }
+  if (ban == 0){
+    *p_procs = (PROC*)realloc(*p_procs, sizeof(PROC)*(*n_entries+1));
+    (*p_procs)[*n_entries].id = id;
+    strcpy((*p_procs)[*n_entries].nombre, nom);
+    (*p_procs)[*n_entries].tam = size;
+    *n_entries = *n_entries + 1;
+  }else{
+    printf("Error, el id ingesado ya existe\n");
+  }
   return 0;
 }
 
@@ -109,15 +121,15 @@ int modify_procs(PROC** p_procs, int n_entries){
       counter = i;
     }
   }
-  printf("Por favor ingrese el id, nombre, y tamaño, usando tabulador o enter para separar c/u.\n");
-  scanf("%d\t %10s\t %10d", &(*p_procs)[counter].id, (*p_procs)[counter].nombre, &(*p_procs)[counter].tam);
+  printf("Por favor ingrese el nombre, y tamaño, usando tabulador o enter para separar c/u.\n");
+  scanf("%10s\t %10d", (*p_procs)[counter].nombre, &(*p_procs)[counter].tam);
   return 0;
 }
 
 int delete_proc(PROC** p_procs, int *n_entries){
   int id;
-  int counter = 0;
-  printf("Por favor ingrese el Id del proceso que desea eliminar\n");
+  int counter = -1;
+  printf("Por favor ingrese el id del proceso que desea eliminar\n");
   scanf("%d", &id);
   printf("\n");
   for (int i = 0; i < *n_entries; i++){
@@ -125,14 +137,18 @@ int delete_proc(PROC** p_procs, int *n_entries){
       counter = i;
     }
   }
-  while(counter < *n_entries){
-    (*p_procs)[counter].id = (*p_procs)[counter+1].id;
-    strcpy((*p_procs)[counter].nombre, (*p_procs)[counter+1].nombre);
-    (*p_procs)[counter].tam = (*p_procs)[counter+1].tam ;
-    counter++;
+  if(counter >= 0){
+    while(counter < *n_entries){
+      (*p_procs)[counter].id = (*p_procs)[counter+1].id;
+      strcpy((*p_procs)[counter].nombre, (*p_procs)[counter+1].nombre);
+      (*p_procs)[counter].tam = (*p_procs)[counter+1].tam ;
+      counter++;
+    }
+    *n_entries = *n_entries -1;
+    *p_procs = (PROC*)realloc(*p_procs, sizeof(PROC)*(*n_entries));
+  }else{
+    printf("Error, el id ingesado no existe");
   }
-  *n_entries = *n_entries -1;
-  *p_procs = (PROC*)realloc(*p_procs, sizeof(PROC)*(*n_entries));
   return 0;
 }
 
@@ -165,16 +181,16 @@ void print_procs(PROC* p_procs, int n_entries){
 }
 
 void save_procs(PROC* p_procs, int n_entries, FILE* procf_desc){
-  rewind(procf_desc);
+  //rewind(procf_desc);
   for (int i = 0; i < n_entries; i++){
-    char buff[200];
-    sprintf(buff, "%d\t %10s\t %10d\n", (p_procs)[i].id,
+    fprintf(procf_desc, "%d\t %10s\t %10d\n", (p_procs)[i].id,
                                 (p_procs)[i].nombre, (p_procs)[i].tam);
-    fputs(buff, procf_desc);
   }
+  printf("Todos los cambios guardados.\n");
 }
 
-void gout(FILE* procf_desc){
+void gout(FILE* procf_desc, PROC** p_procs){
+  free(*p_procs);
   printf("Saliendo...\n");
   fclose(procf_desc);
   exit(1);
