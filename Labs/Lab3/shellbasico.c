@@ -9,8 +9,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <wait.h>
-
+#include <pwd.h>
 #include "parser.h"
+
+void createPrompt();
 
 #define SIZE 100
 
@@ -18,17 +20,17 @@ int main(){
   char ** parameters;
   int numParam, background;
   char expression[SIZE];
-  char * command;
+  char * command, user [200], host [200];
+  createPrompt(user, host);
 
   while(1){
-    printf("\033[31;1mdanny.munera@PC-LIS:~$ \033[0m");
+    printf("\033[31;1m%s@%s:~$ \033[0m", user, host);
     fgets(expression, SIZE, stdin);
     numParam = separaItems(expression, &parameters, &background);
-    if(numParam){             //strcmp(expression, "\n")
-      command = parameters[0];        //NO DIO EL SWITCH CON STRINGS
+    if(numParam){
+      command = parameters[0];
       if(!strcmp(command, "myclr")){  //myclr
-        //printf("\e[1;1H\e[2J");
-        system("clear");
+        printf("\e[1;1H\e[2J");
       }
       if(!strcmp(command, "myecho")){ //myecho
         for(int i = 1; i < numParam;  i++){
@@ -40,15 +42,14 @@ int main(){
         exit(0);
       }
       if(!strcmp(command, "mytime")){
-        //time();
         pid_t pid_mytime = fork();
         int status;
         switch(pid_mytime){
           case 0:   //hijo
             execl("./mytime", "mytime", NULL);
             break;
-          default:  //daddy yankee
-            wait(&status);
+          default:  //padre
+            wait(&status);  //validar si el retorno es != 0
             break;
         }
       }
@@ -59,11 +60,49 @@ int main(){
           case 0:   //hijo
             execl("./mypwd", "mypwd", NULL);
             break;
-          default:  //daddy yankee
-            wait(&status);
+          default:  //padre
+            wait(&status);  //validar si el retorno es != 0
             break;
         }
       }
+
+      if(!strcmp(command, "mycd")){
+        pid_t pid_mycd = fork();
+        int status;
+        switch(pid_mycd){
+          case 0:   //hijo
+            if(numParam == 1){
+              execl("./mycd", "mycd", NULL); //no se hace necesario poner el nombre del ejecutable
+            }else{
+              execl("./mycd", "mycd", parameters[1], NULL);
+            }
+            break;
+          default:  //padre
+            wait(&status);  //validar si el retorno es != 0
+            break;
+        }
+      }
+      if(!strcmp(command, "mydir")){
+        pid_t pid_mydir = fork();
+        int status;
+        switch (pid_mydir) {
+          case 0:
+          if(numParam ==1){
+            execl("./mydir", "mydir", NULL);
+          }else{
+            execl("./mydir", "mydir", parameters[1], NULL);
+          }
+          break;
+          default:
+          wait(&status);
+          break;
+        }
+      }
+
+      if(!strcmp(command, "id")){
+      }
+
+              //system("ls");
       //implementar %s: command not found
     }
 
@@ -79,14 +118,10 @@ int main(){
 
   return 0;
 }
-/*printf ("Numero de parametros: %d\n", numParam);
 
-if (numParam>0)
-{
-  for (i=0; i<numParam; i++)
-    printf ("%d \"%s\"\n", i+1, parameters[i]);
-
-  printf ("Background: %d\n", background);
-
-
-}*/
+void createPrompt(char * user, char * host){
+  uid_t iduser = getuid();
+  struct passwd * us = getpwuid(iduser);
+  strcpy(user, (*us).pw_name);
+  gethostname(host, sizeof(host));
+}
