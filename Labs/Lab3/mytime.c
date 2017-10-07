@@ -1,25 +1,20 @@
+//Syscall time
+//Autor: Santiago Cadavid Bustamante & Juan Fernando Giraldo Cardona
+//Compilar: gcc -Wall mytime.c -o mytime
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/times.h>
+#include <time.h>
 
-int main(){
-  struct tms buf;
-  clock_t count;
-  count = times(&buf);
-  //printf("%.9ld\n", (long)count);
-  printf("%.3ld\t", (&buf)->tms_utime); //User time
-  printf("%.3ld\n", (&buf)->tms_stime); //System time
-  printf("%.3ld\t", (&buf)->tms_cutime); //User time of children
-  printf("%.3ld\n", (&buf)->tms_cstime); //System time of children
-  return 0;
-}
-
-/*
 int main ()
 {
-   struct tms currentTime;
-   times(&currentTime);
-   printf("%d\n", currentTime.tms_stime);
-   return 0;
+  time_t current_time;
+
+  char* current;
+  current_time = time(NULL);        //La función time modifica la fecha a valor abs de los segundos que han pasado
+                                    //desde 1970
+  current = ctime(&current_time);   //La función ctime, recibe como parámetro un time_t que será modificado a la fecha
+                                    //actual del sistema, también formateandola a string
+
+  printf ("%s", current);
+  return 0;
 }
-*/

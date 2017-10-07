@@ -10,6 +10,13 @@ OBJ=parser.o shellbasico.o
 shellbasico: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-clean:
-	rm -f shellbasico $(OBJ) *~ 
+mypwd:
+	$(CC) -Wall mypwd.c -o mypwd
 
+mytime:
+	$(CC) -Wall mytime.c -o mytime
+
+clean:
+	rm -f shellbasico $(OBJ) *~
+	rm -f mytime
+	rm -f mypwd
